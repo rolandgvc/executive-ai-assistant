@@ -413,11 +413,12 @@ def print_events(events, timezone="US/Pacific"):
 
 
 def send_calendar_invite(
-    emails, title, start_time, end_time, email_address, timezone="PST"
+    emails, title, start_time, end_time, email_address, timezone="US/Pacific"
 ):
     import asyncio
     creds = asyncio.run(get_credentials(email_address))
     service = build("calendar", "v3", credentials=creds)
+    tz = _resolve_timezone(timezone)
 
     # Parse the start and end times
     start_datetime = datetime.fromisoformat(start_time)
@@ -427,11 +428,11 @@ def send_calendar_invite(
         "summary": title,
         "start": {
             "dateTime": start_datetime.isoformat(),
-            "timeZone": timezone,
+            "timeZone": tz.zone,
         },
         "end": {
             "dateTime": end_datetime.isoformat(),
-            "timeZone": timezone,
+            "timeZone": tz.zone,
         },
         "attendees": [{"email": email} for email in emails],
         "reminders": {

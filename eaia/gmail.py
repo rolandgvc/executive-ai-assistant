@@ -423,6 +423,30 @@ def send_calendar_invite(
     # Parse the start and end times
     start_datetime = datetime.fromisoformat(start_time)
     end_datetime = datetime.fromisoformat(end_time)
+    if start_datetime.tzinfo is None:
+        query_start = tz.localize(start_datetime).isoformat()
+    else:
+        query_start = start_datetime.astimezone(tz).isoformat()
+    if end_datetime.tzinfo is None:
+        query_end = tz.localize(end_datetime).isoformat()
+    else:
+        query_end = end_datetime.astimezone(tz).isoformat()
+    conflicts = (
+        service.events()
+        .list(
+            calendarId="primary",
+            timeMin=query_start,
+            timeMax=query_end,
+            timeZone=tz.zone,
+            singleEvents=True,
+            orderBy="startTime",
+        )
+        .execute()
+        .get("items", [])
+    )
+    if conflicts:
+        logger.info("Not sending calendar invite because the requested time is busy")
+        return False
     emails = list(set(emails + [email_address]))
     event = {
         "summary": title,

@@ -118,14 +118,17 @@ def send_cal_invite_node(state, config):
     _args = tool_call["args"]
     email = get_config(config)["email"]
     try:
-        send_calendar_invite(
+        sent = send_calendar_invite(
             _args["emails"],
             _args["title"],
             _args["start_time"],
             _args["end_time"],
             email,
         )
-        message = "Sent calendar invite!"
+        if sent:
+            message = "Sent calendar invite!"
+        else:
+            message = "Failed to send calendar invite."
     except Exception as e:
         message = f"Got the following error when sending a calendar invite: {e}"
     return {"messages": [ToolMessage(content=message, tool_call_id=tool_call["id"])]}

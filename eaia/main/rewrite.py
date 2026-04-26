@@ -56,9 +56,7 @@ async def rewrite(state: State, config, store):
         instructions=_prompt,
         name=prompt_config["name"],
     )
-    model = llm.with_structured_output(ReWriteEmail).bind(
-        tool_choice={"type": "function", "function": {"name": "ReWriteEmail"}}
-    )
+    model = llm.with_structured_output(ReWriteEmail)
     response = await model.ainvoke(input_message)
     tool_calls = [
         {

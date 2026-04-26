@@ -2,9 +2,8 @@
 
 import asyncio
 from langgraph_sdk import get_client
-import uuid
-import hashlib
 
+from eaia.conversation import conversation_id_for_email
 from eaia.schemas import EmailData
 
 
@@ -21,9 +20,7 @@ async def main():
         "send_time": "2024-12-26T13:13:41-08:00",
     }
 
-    thread_id = str(
-        uuid.UUID(hex=hashlib.md5(email["thread_id"].encode("UTF-8")).hexdigest())
-    )
+    thread_id = conversation_id_for_email(email)
     try:
         await client.threads.delete(thread_id)
     except:

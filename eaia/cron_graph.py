@@ -1,11 +1,11 @@
 from typing import TypedDict
+from eaia.conversation import conversation_id_for_email
 from eaia.gmail import fetch_group_emails
 from langgraph_sdk import get_client
 import httpx
-import uuid
-import hashlib
 from langgraph.graph import StateGraph, START, END
 from eaia.main.config import get_config
+from eaia.instrumentation import get_introspection_config
 
 client = get_client()
 
@@ -19,9 +19,7 @@ async def main(state: JobKickoff, config):
     email = get_config(config)["email"]
 
     async for email in fetch_group_emails(email, minutes_since=minutes_since):
-        thread_id = str(
-            uuid.UUID(hex=hashlib.md5(email["thread_id"].encode("UTF-8")).hexdigest())
-        )
+        thread_id = conversation_id_for_email(email)
         try:
             thread_info = await client.threads.get(thread_id)
         except httpx.HTTPStatusError as e:
@@ -37,7 +35,10 @@ async def main(state: JobKickoff, config):
         recent_email = thread_info["metadata"].get("email_id")
         if recent_email == email["id"]:
             break
-        await client.threads.update(thread_id, metadata={"email_id": email["id"]})
+        await client.threads.update(
+            thread_id,
+            metadata={"email_id": email["id"], "gmail_thread_id": email["thread_id"]},
+        )
 
         await client.runs.create(
             thread_id,
@@ -51,4 +52,4 @@ graph = StateGraph(JobKickoff)
 graph.add_node(main)
 graph.add_edge(START, "main")
 graph.add_edge("main", END)
-graph = graph.compile()
+graph = graph.compile().with_config(get_introspection_config())

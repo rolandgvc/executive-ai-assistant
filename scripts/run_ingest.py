@@ -1,12 +1,11 @@
 import argparse
 import asyncio
 from typing import Optional
+from eaia.conversation import conversation_id_for_email
 from eaia.gmail import fetch_group_emails
 from eaia.main.config import get_config
 from langgraph_sdk import get_client
 import httpx
-import uuid
-import hashlib
 
 
 async def main(
@@ -17,6 +16,8 @@ async def main(
     early: bool = True,
     rerun: bool = False,
     email: Optional[str] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
 ):
     if email is None:
         email_address = get_config({"configurable": {}})["email"]
@@ -39,11 +40,14 @@ async def main(
         gmail_secret=gmail_secret,
     ):
         email_count += 1
-        print(f"📬 Email {email_count}: {email.get('subject', 'No Subject')} from {email.get('from_email', 'Unknown')}")
+        if email_count <= offset:
+            continue
+        processed_count = email_count - offset
+        if limit is not None and processed_count > limit:
+            break
+        print(f"📬 Email {processed_count}: {email.get('subject', 'No Subject')} from {email.get('from_email', 'Unknown')}")
         
-        thread_id = str(
-            uuid.UUID(hex=hashlib.md5(email["thread_id"].encode("UTF-8")).hexdigest())
-        )
+        thread_id = conversation_id_for_email(email)
         try:
             thread_info = await client.threads.get(thread_id)
         except httpx.HTTPStatusError as e:
@@ -65,7 +69,10 @@ async def main(
                     pass
                 else:
                     continue
-        await client.threads.update(thread_id, metadata={"email_id": email["id"]})
+        await client.threads.update(
+            thread_id,
+            metadata={"email_id": email["id"], "gmail_thread_id": email["thread_id"]},
+        )
 
         await client.runs.create(
             thread_id,
@@ -119,6 +126,18 @@ if __name__ == "__main__":
         default=None,
         help="The email address to use",
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Maximum number of fetched emails to process.",
+    )
+    parser.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        help="Number of fetched emails to skip before processing.",
+    )
 
     args = parser.parse_args()
     asyncio.run(
@@ -130,5 +149,7 @@ if __name__ == "__main__":
             early=bool(args.early),
             rerun=bool(args.rerun),
             email=args.email,
+            limit=args.limit,
+            offset=args.offset,
         )
     )

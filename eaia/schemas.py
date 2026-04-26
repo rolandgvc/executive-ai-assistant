@@ -1,7 +1,7 @@
 from typing import Annotated, List, Literal
 from langgraph.graph.message import AnyMessage
 from pydantic import BaseModel, Field
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 
 from langgraph.graph import add_messages
@@ -92,6 +92,7 @@ class State(TypedDict):
     email: EmailData
     triage: Annotated[RespondTo, convert_obj]
     messages: Annotated[List[AnyMessage], add_messages]
+    calendar_invite_sent: NotRequired[bool]
 
 
 email_template = """From: {author}

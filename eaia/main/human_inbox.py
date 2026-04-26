@@ -1,5 +1,6 @@
 """Parts of the graph that require human input."""
 
+import logging
 import uuid
 
 from langsmith import traceable
@@ -11,6 +12,7 @@ from langgraph_sdk import get_client
 from eaia.main.config import get_config
 
 LGC = get_client()
+logger = logging.getLogger(__name__)
 
 
 class HumanInterruptConfig(TypedDict):
@@ -70,6 +72,20 @@ async def save_email(state: State, config, store: BaseStore, status: str):
         await store.aput(namespace, str(uuid.uuid4()), data)
 
 
+async def save_email_best_effort(state: State, config, store: BaseStore, status: str):
+    try:
+        await save_email(state, config, store, status)
+    except Exception as e:
+        logger.warning("Failed to save triage example memory: %s", e)
+
+
+async def create_reflection_best_effort(rewrite_state: dict):
+    try:
+        await LGC.runs.create(None, "multi_reflection_graph", input=rewrite_state)
+    except Exception as e:
+        logger.warning("Failed to start reflection run: %s", e)
+
+
 @traceable
 async def send_message(state: State, config, store):
     prompt_config = get_config(config)
@@ -101,7 +117,7 @@ async def send_message(state: State, config, store):
             "tool_call_id": tool_call["id"],
         }
         if memory:
-            await save_email(state, config, store, "email")
+            await save_email_best_effort(state, config, store, "email")
             rewrite_state = {
                 "messages": [
                     {
@@ -114,7 +130,7 @@ async def send_message(state: State, config, store):
                 "prompt_types": ["background"],
                 "assistant_key": config["configurable"].get("assistant_id", "default"),
             }
-            await LGC.runs.create(None, "multi_reflection_graph", input=rewrite_state)
+            await create_reflection_best_effort(rewrite_state)
     elif response["type"] == "ignore":
         msg = {
             "role": "assistant",
@@ -129,7 +145,7 @@ async def send_message(state: State, config, store):
             ],
         }
         if memory:
-            await save_email(state, config, store, "no")
+            await save_email_best_effort(state, config, store, "no")
     else:
         raise ValueError(f"Unexpected response: {response}")
 
@@ -167,7 +183,7 @@ async def send_email_draft(state: State, config, store):
             "tool_call_id": tool_call["id"],
         }
         if memory:
-            await save_email(state, config, store, "email")
+            await save_email_best_effort(state, config, store, "email")
             rewrite_state = {
                 "messages": [
                     {
@@ -180,7 +196,7 @@ async def send_email_draft(state: State, config, store):
                 "prompt_types": ["tone", "email", "background", "calendar"],
                 "assistant_key": config["configurable"].get("assistant_id", "default"),
             }
-            await LGC.runs.create(None, "multi_reflection_graph", input=rewrite_state)
+            await create_reflection_best_effort(rewrite_state)
     elif response["type"] == "ignore":
         msg = {
             "role": "assistant",
@@ -195,7 +211,7 @@ async def send_email_draft(state: State, config, store):
             ],
         }
         if memory:
-            await save_email(state, config, store, "no")
+            await save_email_best_effort(state, config, store, "no")
     elif response["type"] == "edit":
         msg = {
             "role": "assistant",
@@ -211,7 +227,7 @@ async def send_email_draft(state: State, config, store):
         }
         if memory:
             corrected = response["args"]["args"]["content"]
-            await save_email(state, config, store, "email")
+            await save_email_best_effort(state, config, store, "email")
             rewrite_state = {
                 "messages": [
                     {
@@ -227,10 +243,10 @@ async def send_email_draft(state: State, config, store):
                 "prompt_types": ["tone", "email", "background", "calendar"],
                 "assistant_key": config["configurable"].get("assistant_id", "default"),
             }
-            await LGC.runs.create(None, "multi_reflection_graph", input=rewrite_state)
+            await create_reflection_best_effort(rewrite_state)
     elif response["type"] == "accept":
         if memory:
-            await save_email(state, config, store, "email")
+            await save_email_best_effort(state, config, store, "email")
         return None
     else:
         raise ValueError(f"Unexpected response: {response}")
@@ -262,7 +278,7 @@ async def notify(state: State, config, store):
     if response["type"] == "response":
         msg = {"type": "user", "content": response["args"]}
         if memory:
-            await save_email(state, config, store, "email")
+            await save_email_best_effort(state, config, store, "email")
             rewrite_state = {
                 "messages": [
                     {
@@ -275,7 +291,7 @@ async def notify(state: State, config, store):
                 "prompt_types": ["email", "background", "calendar"],
                 "assistant_key": config["configurable"].get("assistant_id", "default"),
             }
-            await LGC.runs.create(None, "multi_reflection_graph", input=rewrite_state)
+            await create_reflection_best_effort(rewrite_state)
     elif response["type"] == "ignore":
         msg = {
             "role": "assistant",
@@ -290,7 +306,7 @@ async def notify(state: State, config, store):
             ],
         }
         if memory:
-            await save_email(state, config, store, "no")
+            await save_email_best_effort(state, config, store, "no")
     else:
         raise ValueError(f"Unexpected response: {response}")
 
@@ -328,7 +344,7 @@ async def send_cal_invite(state: State, config, store):
             "tool_call_id": tool_call["id"],
         }
         if memory:
-            await save_email(state, config, store, "email")
+            await save_email_best_effort(state, config, store, "email")
             rewrite_state = {
                 "messages": [
                     {
@@ -341,7 +357,7 @@ async def send_cal_invite(state: State, config, store):
                 "prompt_types": ["email", "background", "calendar"],
                 "assistant_key": config["configurable"].get("assistant_id", "default"),
             }
-            await LGC.runs.create(None, "multi_reflection_graph", input=rewrite_state)
+            await create_reflection_best_effort(rewrite_state)
     elif response["type"] == "ignore":
         msg = {
             "role": "assistant",
@@ -356,7 +372,7 @@ async def send_cal_invite(state: State, config, store):
             ],
         }
         if memory:
-            await save_email(state, config, store, "no")
+            await save_email_best_effort(state, config, store, "no")
     elif response["type"] == "edit":
         msg = {
             "role": "assistant",
@@ -371,7 +387,7 @@ async def send_cal_invite(state: State, config, store):
             ],
         }
         if memory:
-            await save_email(state, config, store, "email")
+            await save_email_best_effort(state, config, store, "email")
             rewrite_state = {
                 "messages": [
                     {
@@ -384,10 +400,10 @@ async def send_cal_invite(state: State, config, store):
                 "prompt_types": ["email", "background", "calendar"],
                 "assistant_key": config["configurable"].get("assistant_id", "default"),
             }
-            await LGC.runs.create(None, "multi_reflection_graph", input=rewrite_state)
+            await create_reflection_best_effort(rewrite_state)
     elif response["type"] == "accept":
         if memory:
-            await save_email(state, config, store, "email")
+            await save_email_best_effort(state, config, store, "email")
         return None
     else:
         raise ValueError(f"Unexpected response: {response}")

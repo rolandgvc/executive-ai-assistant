@@ -1,6 +1,7 @@
 """Core agent responsible for drafting email."""
 
 from langchain_core.runnables import RunnableConfig
+from langchain_core.messages import AIMessage
 from langchain_openai import ChatOpenAI
 from langgraph.store.base import BaseStore
 
@@ -143,4 +144,17 @@ async def draft_response(state: State, config: RunnableConfig, store: BaseStore)
             messages += [{"role": "user", "content": "Please call a valid tool call."}]
         else:
             break
+    if len(response.tool_calls) != 1:
+        response = AIMessage(
+            content="",
+            tool_calls=[
+                {
+                    "name": "Question",
+                    "args": {
+                        "content": "I couldn't draft a reliable response for this email. Please review it manually."
+                    },
+                    "id": "invalid_draft_tool_fallback",
+                }
+            ],
+        )
     return {"draft": response, "messages": [response]}

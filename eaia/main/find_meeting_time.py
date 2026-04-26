@@ -7,7 +7,7 @@ from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_openai import ChatOpenAI
 
-from eaia.gmail import get_events_for_days
+from eaia.gmail import get_events_for_days, _resolve_timezone
 from eaia.schemas import State
 
 from eaia.main.config import get_config
@@ -68,8 +68,8 @@ async def find_meeting_time(state: State, config: RunnableConfig):
     model = config["configurable"].get("model", "gpt-4o")
     llm = ChatOpenAI(model=model, temperature=0)
     agent = create_react_agent(llm, [get_events_for_days])
-    current_date = datetime.now()
     prompt_config = get_config(config)
+    current_date = datetime.now(_resolve_timezone(prompt_config.get("timezone")))
     input_message = meeting_prompts.format(
         email_thread=state["email"]["page_content"],
         author=state["email"]["from_email"],

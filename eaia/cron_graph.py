@@ -34,7 +34,7 @@ async def main(state: JobKickoff, config):
             continue
         recent_email = thread_info["metadata"].get("email_id")
         if recent_email == email["id"]:
-            break
+            continue
         await client.threads.update(
             thread_id,
             metadata={"email_id": email["id"], "gmail_thread_id": email["thread_id"]},

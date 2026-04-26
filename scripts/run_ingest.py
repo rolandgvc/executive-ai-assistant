@@ -13,7 +13,7 @@ async def main(
     minutes_since: int = 60,
     gmail_token: Optional[str] = None,
     gmail_secret: Optional[str] = None,
-    early: bool = True,
+    early: bool = False,
     rerun: bool = False,
     email: Optional[str] = None,
     limit: Optional[int] = None,
@@ -93,7 +93,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--early",
         type=int,
-        default=1,
+        default=0,
         help="whether to break when encountering seen emails",
     )
     parser.add_argument(

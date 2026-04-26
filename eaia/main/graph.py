@@ -144,12 +144,30 @@ def send_email_node(state, config):
     new_receipients = _args["new_recipients"]
     if isinstance(new_receipients, str):
         new_receipients = json.loads(new_receipients)
-    send_email(
-        state["email"]["id"],
-        _args["content"],
-        email,
-        addn_receipients=new_receipients,
-    )
+    try:
+        send_email(
+            state["email"]["id"],
+            _args["content"],
+            email,
+            addn_receipients=new_receipients,
+        )
+    except Exception as e:
+        return {
+            "email_send_status": "failed",
+            "messages": [
+                ToolMessage(
+                    content=f"Got the following error when sending the email: {e}",
+                    tool_call_id=tool_call["id"],
+                )
+            ],
+        }
+    return {"email_send_status": "success"}
+
+
+def route_after_send_email(state: State) -> Literal["mark_as_read_node", "draft_response"]:
+    if state.get("email_send_status") == "success":
+        return "mark_as_read_node"
+    return "draft_response"
 
 
 def mark_as_read_node(state, config):
@@ -188,7 +206,7 @@ graph_builder.add_node(find_meeting_time)
 graph_builder.add_edge("find_meeting_time", "draft_response")
 graph_builder.add_edge("bad_tool_name", "draft_response")
 graph_builder.add_edge("send_cal_invite_node", "draft_response")
-graph_builder.add_edge("send_email_node", "mark_as_read_node")
+graph_builder.add_conditional_edges("send_email_node", route_after_send_email)
 graph_builder.add_edge("rewrite", "send_email_draft")
 graph_builder.add_edge("send_email_draft", "human_node")
 graph_builder.add_edge("mark_as_read_node", END)

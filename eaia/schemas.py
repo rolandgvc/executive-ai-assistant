@@ -1,4 +1,4 @@
-from typing import Annotated, List, Literal
+from typing import Annotated, List, Literal, NotRequired
 from langgraph.graph.message import AnyMessage
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
@@ -92,6 +92,7 @@ class State(TypedDict):
     email: EmailData
     triage: Annotated[RespondTo, convert_obj]
     messages: Annotated[List[AnyMessage], add_messages]
+    email_send_status: NotRequired[Literal["success", "failed"]]
 
 
 email_template = """From: {author}

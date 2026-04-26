@@ -25,7 +25,7 @@ Table of contents
 ### Env
 
 1. Fork and clone this repo. Note: make sure to fork it first, as in order to deploy this you will need your own repo.
-2. Create a Python virtualenv and activate it (e.g. `pyenv virtualenv 3.11.1 eaia`, `pyenv activate eaia`)
+2. Create a Python 3.12 virtualenv and activate it (e.g. `pyenv virtualenv 3.12.0 eaia`, `pyenv activate eaia`)
 3. Run `pip install -e .` to install dependencies and the package
 
 ### Set up your credentials

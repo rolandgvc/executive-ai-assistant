@@ -116,7 +116,9 @@ def enter_after_human(
 def send_cal_invite_node(state, config):
     tool_call = state["messages"][-1].tool_calls[0]
     _args = tool_call["args"]
-    email = get_config(config)["email"]
+    user_config = get_config(config)
+    email = user_config["email"]
+    timezone = user_config.get("timezone")
     try:
         sent = send_calendar_invite(
             _args["emails"],
@@ -124,6 +126,7 @@ def send_cal_invite_node(state, config):
             _args["start_time"],
             _args["end_time"],
             email,
+            timezone,
         )
         if sent:
             message = "Sent calendar invite!"

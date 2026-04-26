@@ -329,6 +329,7 @@ def get_events_for_days(date_strs: list[str]):
     config = ensure_config()
     user_config = get_config(config)
     user_email = user_config["email"]
+    tz = _resolve_timezone(user_config.get("timezone"))
     
     creds = asyncio.run(get_credentials(user_email))
     service = build("calendar", "v3", credentials=creds)
@@ -337,8 +338,8 @@ def get_events_for_days(date_strs: list[str]):
         # Convert the date string to a datetime.date object
         day = datetime.strptime(date_str, "%d-%m-%Y").date()
 
-        start_of_day = datetime.combine(day, time.min).isoformat() + "Z"
-        end_of_day = datetime.combine(day, time.max).isoformat() + "Z"
+        start_of_day = tz.localize(datetime.combine(day, time.min)).isoformat()
+        end_of_day = tz.localize(datetime.combine(day, time.max)).isoformat()
 
         events_result = (
             service.events()
@@ -346,6 +347,7 @@ def get_events_for_days(date_strs: list[str]):
                 calendarId="primary",
                 timeMin=start_of_day,
                 timeMax=end_of_day,
+                timeZone=tz.zone,
                 singleEvents=True,
                 orderBy="startTime",
             )
@@ -353,8 +355,16 @@ def get_events_for_days(date_strs: list[str]):
         )
         events = events_result.get("items", [])
 
-        results += f"***FOR DAY {date_str}***\n\n" + print_events(events)
+        results += f"***FOR DAY {date_str}***\n\n" + print_events(events, tz.zone)
     return results
+
+
+def _resolve_timezone(timezone: str | None):
+    aliases = {"PST": "US/Pacific", "PDT": "US/Pacific"}
+    try:
+        return pytz.timezone(aliases.get(timezone or "", timezone or "US/Pacific"))
+    except pytz.UnknownTimeZoneError:
+        return pytz.timezone("US/Pacific")
 
 
 def format_datetime_with_timezone(dt_str, timezone="US/Pacific"):
@@ -374,7 +384,7 @@ def format_datetime_with_timezone(dt_str, timezone="US/Pacific"):
     return dt.strftime("%Y-%m-%d %I:%M %p %Z")
 
 
-def print_events(events):
+def print_events(events, timezone="US/Pacific"):
     """
     Prints the events in a human-readable format.
 
@@ -392,8 +402,8 @@ def print_events(events):
         summary = event.get("summary", "No Title")
 
         if "T" in start:  # Only format if it's a datetime
-            start = format_datetime_with_timezone(start)
-            end = format_datetime_with_timezone(end)
+            start = format_datetime_with_timezone(start, timezone)
+            end = format_datetime_with_timezone(end, timezone)
 
         result += f"Event: {summary}\n"
         result += f"Starts: {start}\n"

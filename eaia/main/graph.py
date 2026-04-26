@@ -134,18 +134,31 @@ def send_cal_invite_node(state, config):
     return {"messages": [ToolMessage(content=message, tool_call_id=tool_call["id"])]}
 
 
+def _normalize_new_recipients(value):
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError as e:
+            raise ValueError("new_recipients must be a list of email addresses") from e
+        if isinstance(parsed, list):
+            return parsed
+    raise ValueError("new_recipients must be a list of email addresses")
+
+
 def send_email_node(state, config):
     tool_call = state["messages"][-1].tool_calls[0]
     _args = tool_call["args"]
     email = get_config(config)["email"]
-    new_receipients = _args["new_recipients"]
-    if isinstance(new_receipients, str):
-        new_receipients = json.loads(new_receipients)
+    new_recipients = _normalize_new_recipients(_args.get("new_recipients"))
     send_email(
         state["email"]["id"],
         _args["content"],
         email,
-        addn_receipients=new_receipients,
+        addn_receipients=new_recipients,
     )
 
 

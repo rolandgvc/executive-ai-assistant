@@ -64,10 +64,8 @@ async def save_email(state: State, config, store: BaseStore, status: str):
         "triage_examples",
     )
     key = state["email"]["id"]
-    response = await store.aget(namespace, key)
-    if response is None:
-        data = {"input": state["email"], "triage": status}
-        await store.aput(namespace, str(uuid.uuid4()), data)
+    data = {"input": state["email"], "triage": status}
+    await store.aput(namespace, key, data)
 
 
 @traceable

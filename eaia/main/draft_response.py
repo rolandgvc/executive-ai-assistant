@@ -6,7 +6,6 @@ from langgraph.store.base import BaseStore
 
 from eaia.schemas import (
     State,
-    NewEmailDraft,
     ResponseEmailDraft,
     Question,
     MeetingAssistant,
@@ -54,12 +53,6 @@ If you are sure that {name} would want to schedule a meeting, and you know that 
 
 {schedule_preferences}
 
-# Using the `NewEmailDraft` tool
-
-Sometimes you will need to start a new email thread. If you have all the necessary information for this, use the `NewEmailDraft` tool for this.
-
-If {name} asks someone if it's okay to introduce them, and they respond yes, you should draft a new email with that introduction.
-
 # Using the `MeetingAssistant` tool
 
 If the email is from a legitimate person and is working to schedule a meeting, call the MeetingAssistant to get a response from a specialist!
@@ -89,7 +82,6 @@ async def draft_response(state: State, config: RunnableConfig, store: BaseStore)
         tool_choice="required",
     )
     tools = [
-        NewEmailDraft,
         ResponseEmailDraft,
         Question,
         MeetingAssistant,

@@ -6,6 +6,7 @@ import uuid
 import hashlib
 from langgraph.graph import StateGraph, START, END
 from eaia.main.config import get_config
+from eaia.instrumentation import get_introspection_config
 
 client = get_client()
 
@@ -51,4 +52,4 @@ graph = StateGraph(JobKickoff)
 graph.add_node(main)
 graph.add_edge(START, "main")
 graph.add_edge("main", END)
-graph = graph.compile()
+graph = graph.compile().with_config(get_introspection_config())

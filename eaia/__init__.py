@@ -1,3 +1,3 @@
-from eaia.instrumentation import client as introspection_client
+from eaia.instrumentation import get_introspection_config
 
-__all__ = ["introspection_client"]
+__all__ = ["get_introspection_config"]

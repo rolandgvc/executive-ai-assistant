@@ -4,6 +4,7 @@ from langchain_anthropic import ChatAnthropic
 from typing import TypedDict, Optional
 from langgraph.graph import StateGraph, START, END, MessagesState
 from langgraph.types import Command, Send
+from eaia.instrumentation import get_introspection_config
 
 TONE_INSTRUCTIONS = "Only update the prompt to include instructions on the **style and tone and format** of the response. Do NOT update the prompt to include anything about the actual content - only the style and tone and format. The user sometimes responds differently to different types of people - take that into account, but don't be too specific."
 RESPONSE_INSTRUCTIONS = "Only update the prompt to include instructions on the **content** of the response. Do NOT update the prompt to include anything about the tone or style or format of the response."
@@ -98,7 +99,9 @@ general_reflection_graph = StateGraph(ReflectionState)
 general_reflection_graph.add_node(update_general)
 general_reflection_graph.add_edge(START, "update_general")
 general_reflection_graph.add_edge("update_general", END)
-general_reflection_graph = general_reflection_graph.compile()
+general_reflection_graph = general_reflection_graph.compile().with_config(
+    get_introspection_config()
+)
 
 MEMORY_TO_UPDATE = {
     "tone": "Instruction about the tone and style and format of the resulting email. Update this if you learn new information about the tone in which the user likes to respond that may be relevant in future emails.",
@@ -187,4 +190,6 @@ multi_reflection_graph = StateGraph(MultiMemoryInput)
 multi_reflection_graph.add_node(determine_what_to_update)
 multi_reflection_graph.add_node("reflection", call_reflection)
 multi_reflection_graph.add_edge(START, "determine_what_to_update")
-multi_reflection_graph = multi_reflection_graph.compile()
+multi_reflection_graph = multi_reflection_graph.compile().with_config(
+    get_introspection_config()
+)

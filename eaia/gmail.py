@@ -54,8 +54,13 @@ async def get_credentials(
             user_id=user_email
         )
         
-        if auth_result.needs_auth:
-            print(f"Please visit: {auth_result.auth_url}")
+        if auth_result.status == "completed":
+            token = auth_result.token
+        else:
+            if not auth_result.url or not auth_result.auth_id:
+                raise ValueError("Authentication required, but no OAuth URL was returned")
+
+            print(f"Please visit: {auth_result.url}")
             print("Complete the OAuth flow and then retry.")
             
             # Wait for completion outside of LangGraph context
@@ -64,8 +69,6 @@ async def get_credentials(
                 timeout=300
             )
             token = completed_result.token
-        else:
-            token = auth_result.token
         
         if not token:
             raise ValueError("Failed to obtain access token")

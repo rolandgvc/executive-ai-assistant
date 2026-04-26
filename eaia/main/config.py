@@ -2,6 +2,7 @@ import yaml
 from pathlib import Path
 
 _ROOT = Path(__file__).absolute().parent
+_DEFAULT_CONFIG = yaml.safe_load(_ROOT.joinpath("config.yaml").read_text())
 
 
 def get_config(config: dict):
@@ -11,5 +12,4 @@ def get_config(config: dict):
     if "email" in config["configurable"]:
         return config["configurable"]
     else:
-        with open(_ROOT.joinpath("config.yaml")) as stream:
-            return yaml.safe_load(stream)
+        return _DEFAULT_CONFIG

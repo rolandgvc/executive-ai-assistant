@@ -32,7 +32,8 @@ Table of contents
 
 1. Export OpenAI API key (`export OPENAI_API_KEY=...`)
 2. Export Anthropic API key (`export ANTHROPIC_API_KEY=...`)
-3. Set up Google OAuth
+3. Optional: export Introspection credentials to trace LangGraph runs (`export INTROSPECTION_TOKEN=...` and `export INTROSPECTION_BASE_URL=...`)
+4. Set up Google OAuth
    1. [Enable the API](https://developers.google.com/gmail/api/quickstart/python#enable_the_api)
       - Enable Gmail API if not already by clicking the blue button `Enable the API`
    2. [Authorize credentials for a desktop application](https://developers.google.com/gmail/api/quickstart/python#authorize_credentials_for_a_desktop_application)
@@ -86,6 +87,8 @@ python scripts/run_ingest.py --minutes-since 120 --rerun 1 --early 0
 
 This will ingest all emails in the last 120 minutes (`--minutes-since`). It will NOT break early if it sees an email it already saw (`--early 0`) and it will
 rerun ones it has seen before (`--rerun 1`). It will run against the local instance we have running.
+
+For smaller local test runs, add `--limit 10` to process at most ten fetched emails.
 
 ### Set up Agent Inbox with Local EAIA
 

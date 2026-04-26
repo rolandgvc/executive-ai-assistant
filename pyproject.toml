@@ -17,7 +17,7 @@ google-api-python-client = "^2.190.0"
 langchain-auth = "^0.2.0"
 langgraph-sdk = ">=0.2.2,<0.3.0"
 langsmith = "^0.7.6"
-introspection-sdk = "^0.4.0"
+introspection-sdk = { git = "https://github.com/introspection-org/introspection-python-sdk.git", branch = "main" }
 pytz = "*"
 pyyaml = "*"
 python-dateutil = "^2.9.0.post0"

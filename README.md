@@ -32,18 +32,19 @@ Table of contents
 
 1. Export OpenAI API key (`export OPENAI_API_KEY=...`)
 2. Export Anthropic API key (`export ANTHROPIC_API_KEY=...`)
-3. Optional: export Introspection credentials to trace LangGraph runs (`export INTROSPECTION_TOKEN=...` and `export INTROSPECTION_BASE_URL=...`)
-4. Set up Google OAuth
+3. Export LangSmith API key for LangChain Auth (`export LANGSMITH_API_KEY=...`)
+4. Optional: export Introspection credentials to trace LangGraph runs (`export INTROSPECTION_TOKEN=...` and `export INTROSPECTION_BASE_URL=...`)
+5. Set up Google OAuth
    1. [Enable the API](https://developers.google.com/gmail/api/quickstart/python#enable_the_api)
       - Enable Gmail API if not already by clicking the blue button `Enable the API`
    2. [Authorize credentials for a desktop application](https://developers.google.com/gmail/api/quickstart/python#authorize_credentials_for_a_desktop_application)
   
 > Note: If you're using a personal email (non-Google Workspace), select "External" as the User Type in the OAuth consent screen. With "External" selected, you must add your email as a test user in the Google Cloud Console under "OAuth consent screen" > "Test users" to avoid the "App has not completed verification" error. The "Internal" option only works for Google Workspace accounts.
 
-5. Download the client secret. After that, run these commands:
-6. `mkdir eaia/.secrets` - This will create a folder for secrets
-7. `mv ${PATH-TO-CLIENT-SECRET.JSON} eaia/.secrets/secrets.json` - This will move the client secret you just created to that secrets folder
-8. `python scripts/setup_gmail.py` - This will create the Google OAuth provider using LangChain Auth and handle the initial authentication flow.
+6. Download the client secret. After that, run these commands:
+7. `mkdir eaia/.secrets` - This will create a folder for secrets
+8. `mv ${PATH-TO-CLIENT-SECRET.JSON} eaia/.secrets/secrets.json` - This will move the client secret you just created to that secrets folder
+9. `python scripts/setup_gmail.py` - This will create the Google OAuth provider using LangChain Auth and handle the initial authentication flow.
 
 **Authentication Flow**: EAIA uses LangChain Auth for OAuth management. The setup script creates a Google OAuth provider that handles token storage and refresh automatically. When you first run the application, you'll be prompted to complete OAuth authentication if needed.
 
@@ -122,6 +123,7 @@ You will need a LangSmith Plus account to be able to access [LangGraph Platform]
 7. Add the following environment variables
    1. `OPENAI_API_KEY`
    2. `ANTHROPIC_API_KEY`  
+   3. `LANGSMITH_API_KEY`
 8. Click `Submit` and watch your EAIA deploy
 
 ### Ingest manually

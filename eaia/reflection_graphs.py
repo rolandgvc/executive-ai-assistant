@@ -170,7 +170,7 @@ async def determine_what_to_update(state: MultiMemoryInput):
     class MemoryToUpdate(TypedDict):
         memory_types_to_update: list[str]
 
-    response = reflection_model.with_structured_output(MemoryToUpdate).invoke(prompt)
+    response = await reflection_model.with_structured_output(MemoryToUpdate).ainvoke(prompt)
     sends = []
     for t in response["memory_types_to_update"]:
         _state = {
